@@ -149,7 +149,7 @@ class IndeedJobApplier:
             return resume_button
         except Exception:
             return None
-    
+
 
 
     def apply_for_job(self):
@@ -162,80 +162,93 @@ class IndeedJobApplier:
 
                 # Assuming the resume button is present, proceed with the application process
                 time.sleep(random.uniform(5, 10))
-                print("I waited 5 second for the resume to be present. Now I will select it")
-                self.driver.execute_script("arguments[0].click();", WebDriverWait(self.driver, 10).until(
+                print("I waited 5 seconds for the resume to be present. Now I will select it")
+                resume_button = WebDriverWait(self.driver, 10).until(
                     EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/div/div[1]/div/div/div[2]/div[2]/div/div/main/div[2]/div/fieldset/div[3]/label"))
-                ))
+                )
+                self.driver.execute_script("arguments[0].click();", resume_button)
                 time.sleep(random.uniform(5, 10))
                 print("I just selected the resume now I will be clicking the first continue button")
 
                 # Scroll the page by a predefined coordinate (e.g., 1000 pixels down)
                 self.driver.execute_script("window.scrollBy(0, 1000);")
                 time.sleep(random.uniform(2, 3))  # Give the page time to scroll
-                print("Now I will click the continue button")
-                time.sleep(10)
-                # Now, locate and click the continue button
-                #self.driver.find_element(By.XPATH, "(//button[contains(., 'Continue')])[3]").click()
 
-
-
-                # Add explicit wait before attempting to click the button
-                '''continue_button = WebDriverWait(self.driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, "(//button[contains(., 'Continue')])[3]"))
-                )
-
-                # Click the button using JavaScript to ensure it gets clicked
-                self.driver.execute_script("arguments[0].click();", continue_button)
-                print("Clicked the Continue button, moving to the next page.")
-                time.sleep(random.uniform(5, 10))'''
-
-                # Try to click the continue button using a single XPath with indexing
-                for i in range(1, 9):  # Adjust the range as needed
+                # Click the first continue button using multiple selectors
+                continue_button_clicked = False
+                for i in range(1, 9):
                     xpath_selector = f"(//button[contains(., 'Continue')])[{i}]"
                     try:
                         print(f"Trying XPath selector {xpath_selector}")
-                        time.sleep(random.uniform(2, 5))
                         button = WebDriverWait(self.driver, 10).until(
                             EC.element_to_be_clickable((By.XPATH, xpath_selector))
                         )
                         self.driver.execute_script("arguments[0].click();", button)
                         time.sleep(random.uniform(2, 5))  # Wait for the next page to load
                         print(f"Successfully clicked the Continue button using XPath with index {i}.")
-                        break  # Break out of the loop if a button is successfully clicked
+                        continue_button_clicked = True
+                        break
                     except Exception as e:
                         print(f"Error clicking continue button with XPath {xpath_selector}: {e}")
 
+                if not continue_button_clicked:
+                    print("No continue button clicked, skipping this job.")
+                    return False
 
-                # Handle the continue page by filling in necessary fields
-                self.handle_continue_page()
+                # Continue navigating pages until the Submit button is found
+                while True:
+                    time.sleep(random.uniform(2, 3))  # Give the page time to load
+                    print("Handling the continue page by trying to answer questions if present")
+                    self.handle_continue_page()  # Your function to handle all fields on the page
 
-                # Check if the "Submit application" button is available
-                try:
-                    submit_button = WebDriverWait(self.driver, 5).until(
-                        EC.element_to_be_clickable((By.CSS_SELECTOR, "button[aria-label='Submit application']"))
-                    )
-                    print("Found Submit button, submitting the application.")
-                    actions = ActionChains(self.driver)
-                    actions.move_to_element(submit_button).perform()
-                    submit_button.click()
-                    time.sleep(random.uniform(2, 3))
-                    print("Application submitted successfully.")
-                    return True  # Exit after successful submission
-                except TimeoutException:
-                    print("Submit button not found, moving to the next page.")
+                    # Look for the submit button
+                    try:
+                        submit_button = WebDriverWait(self.driver, 10).until(
+                            EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Submit')]"))
+                        )
+                        self.driver.execute_script("arguments[0].click();", submit_button)
+                        time.sleep(random.uniform(2, 3))
+                        print("Successfully submitted the application.")
+                        return True
+                    except Exception:
+                        print("Submit button not found, checking for other buttons.")
 
-                # Click the "Continue" button to proceed to the next page
-                try:
-                    continue_button = WebDriverWait(self.driver, 10).until(
-                        EC.element_to_be_clickable((By.CSS_SELECTOR, "button[aria-label='Continue to next step']"))
-                    )
-                    continue_button.click()
-                    time.sleep(random.uniform(2, 3))
-                    print("Clicked the Continue button, moving to the next page.")
-                except Exception as e:
-                    print(f"Error clicking Continue button: {e}")
-                    return False  # Exit if unable to continue
+                    # Look for the review application button
+                    try:
+                        review_button = WebDriverWait(self.driver, 10).until(
+                            EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Review')]"))
+                        )
+                        self.driver.execute_script("arguments[0].click();", review_button)
+                        time.sleep(random.uniform(2, 3))
+                        print("Clicked the Review Application button.")
+                        continue
+                    except Exception:
+                        print("Review Application button not found, checking for Continue button.")
 
+                    # Look for the next continue button if submit or review buttons are not present
+                    continue_button_clicked = False
+                    for i in range(1, 9):
+                        xpath_selector = f"(//button[contains(., 'Continue')])[{i}]"
+                        try:
+                            print(f"Trying XPath selector {xpath_selector}")
+                            button = WebDriverWait(self.driver, 10).until(
+                                EC.element_to_be_clickable((By.XPATH, xpath_selector))
+                            )
+                            self.driver.execute_script("arguments[0].click();", button)
+                            time.sleep(random.uniform(2, 5))  # Wait for the next page to load
+                            print(f"Successfully clicked the Continue button using XPath with index {i}.")
+                            continue_button_clicked = True
+                            break
+                        except Exception as e:
+                            print(f"Error clicking continue button with XPath {xpath_selector}: {e}")
+
+                    if not continue_button_clicked:
+                        print("No continue button clicked, no more actions to take. Exiting.")
+                        return False
+                    
+
+            print("Job application process timed out.")
+            
         except Exception as e:
             print(f"Was not able to apply for job: {e}")
             return False
@@ -247,9 +260,11 @@ class IndeedJobApplier:
         Method to handle any interactions required on the continue page.
         This includes filling out fields, selecting radio buttons, and dropdowns.
         """
+        print("I am in the handle continue function to answer questions ")
         try:
             # Check and fill empty fields on the continue page and fill them with GPT response
             # Input text field
+            print("Im checking if there are empty input field")
             input_fields = self.driver.find_elements(By.CSS_SELECTOR, "input[type='text']:not(.search-global-typeahead__input)")
             for field in input_fields:
                 value = field.get_attribute('value')
@@ -282,6 +297,7 @@ class IndeedJobApplier:
 
     def handle_radio_buttons(self):
         """Handles the radio buttons on the continue page."""
+        print("Im checking if there are unselected radio button")
         try:
             fieldsets = self.driver.find_elements(By.XPATH, "//fieldset[@data-test-form-builder-radio-button-form-component='true']")
             for fieldset in fieldsets:
@@ -304,6 +320,7 @@ class IndeedJobApplier:
 
     def handle_dropdowns(self):
         """Handles dropdowns on the continue page."""
+        print("Im checking if there are unhandled dropdowns")
         try:
             selects = self.driver.find_elements(By.XPATH, "//select[@data-test-text-entity-list-form-select]")
             for select_element in selects:
