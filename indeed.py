@@ -29,7 +29,7 @@ summary_select_questions = "profectional english, yes for full time, contract, p
 class Dice:
     def __init__(self):
         options = FirefoxOptions()
-        profile_path = r'C:\Users\DELL\AppData\Roaming\Mozilla\Firefox\Profiles\6d4dc8w2.default-release'
+        profile_path = r'C:\Users\DELL\AppData\Roaming\Mozilla\Firefox\Profiles\your_profile_path2.default-release'
         options.add_argument('--disable-gpu')
         options.add_argument('--no-sandbox')
         #options.add_argument('--headless')
