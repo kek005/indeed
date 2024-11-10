@@ -23,7 +23,7 @@ pip install python-dotenv
 
 Setup
 Clone the Repository:
-git clone https://github.com/yourusername/IndeedJobAutomation.git
+git clone https://github.com/kek005/indeed.git
 
 cd IndeedJobAutomation
 Configure Environment Variables:
